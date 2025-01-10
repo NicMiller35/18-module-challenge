@@ -15,6 +15,8 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
 
+  const [loginUser] = useMutation(LOGIN_USER);
+
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setUserFormData({ ...userFormData, [name]: value });
@@ -31,10 +33,10 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
     }
 
     
-      const [loginUser] = useMutation(LOGIN_USER);
-
       try {
-        const data = await loginUser();
+        const data = await loginUser({
+          variables: { ...userFormData },
+        });
 
       if (!data) {
         throw new Error('something went wrong!');
