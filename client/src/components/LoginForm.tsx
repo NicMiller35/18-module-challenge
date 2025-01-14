@@ -45,7 +45,7 @@ const LoginForm = ({}: { handleModalClose: () => void }) => {
       const  { token } = data.data.login; // await response.json();
       Auth.login(token);
     } catch (err) {
-      console.error(err);
+      console.error("IS this the error", err);
       setShowAlert(true);
     }
 
