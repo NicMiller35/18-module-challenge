@@ -32,25 +32,36 @@ export const resolvers = {
       const token = signToken(user.username, user.email, String(user._id));
       return { token, user };
     },
-    saveBook: async (_parent: any, { input }: { input: any }, context: any) => {
+    saveBook: async (_parent: any, { bookData }: { bookData: any }, context: any) => {
+      console.log('Conext', context)
       if (!context.user) {
         throw new AuthenticationError('You must be logged in');
       }
       return await User.findByIdAndUpdate(
         context.user._id,
-        { $addToSet: { savedBooks: input } },
+        { $addToSet: { savedBooks: bookData } },
         { new: true }
       );
     },
+   
     removeBook: async (_parent: any, { bookId }: { bookId: string }, context: any) => {
       if (!context.user) {
-        throw new AuthenticationError('You must be logged in');
+        throw new AuthenticationError('You must be logged in to remove a book.');
       }
-      return await User.findByIdAndUpdate(
-        context.user._id,
-        { $pull: { savedBooks: { bookId } } },
-        { new: true }
-      );
+      try {
+        const updatedUser = await User.findByIdAndUpdate(
+          context.user._id,
+          { $pull: { savedBooks: { bookId } } },
+          { new: true }
+        );
+        if (!updatedUser) {
+          throw new Error("User not found.");
+        }
+        return updatedUser;
+      } catch (error) {
+        console.error("Error removing book:");
+        throw new Error("Failed to remove the book.");
+      }
     },
   },
 };

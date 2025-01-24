@@ -1,9 +1,8 @@
-import type { Request, Response, NextFunction } from 'express';
-import { GraphQLError } from 'graphql';
+
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-
 dotenv.config();
+
 // Define JWT payload interface
 interface JwtPayload {
   _id: string;
@@ -11,31 +10,36 @@ interface JwtPayload {
   email: string;
 }
 // Middleware to authenticate JWT token
-export const authenticateToken = (req: Request & { user?: JwtPayload }, _: Response, next: NextFunction) => {
+export const authenticateToken = ({req}: any) => {
   // Retrieve Authorization header
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    // Extract token from the header
-    const token = authHeader.split(' ')[1];
-    // Get secret key from environment variables
-    const secretKey = process.env.JWT_SECRET_KEY || '';
-    // Verify JWT token
-    jwt.verify(token, secretKey, (err, decoded) => {
-      if (err) {
-        throw new GraphQLError('Forbidden', {
-          extensions: { code: 'FORBIDDEN' },
-        });
-      }
-      // Attach decoded user info to the request object
-      req.user = decoded as JwtPayload;
-      return next();
-    });
-  } else {
-    throw new GraphQLError('Unauthorized', {
-      extensions: { code: 'UNAUTHORIZED' },
-    });
+  let token = req.body.token || req.query.token || req.headers.authorization;
+
+  // If the token is sent in the authorization header, extract the token from the header
+  if (req.headers.authorization) {
+    token = token.split(' ').pop().trim();
   }
+
+  // If no token is provided, return the request object as is
+  if (!token) {
+    return req;
+  }
+
+  // Try to verify the token
+  try {
+    console.log('Token:', token);
+    const { data }: any = jwt.verify(token, process.env.JWT_SECRET_KEY || '', { maxAge: '2hr' });
+    // If the token is valid, attach the user data to the request object
+    req.user = data as JwtPayload;
+  } catch (err) {
+    // If the token is invalid, log an error message
+    console.log('Invalid token');
+  }
+
+  // Return the request object
+  return req;
 };
+  
+
 // Function to sign a JWT token
 export const signToken = (username: string, email: string, _id: string) => {
   // Create payload
@@ -43,6 +47,6 @@ export const signToken = (username: string, email: string, _id: string) => {
   // Get secret key from environment variables
   const secretKey = process.env.JWT_SECRET_KEY || '';
   // Generate JWT token with 1-hour expiry
-  return jwt.sign(payload, secretKey, { expiresIn: '1h' });
+  return jwt.sign({data: payload}, secretKey, { expiresIn: '1h' });
 };
   
