@@ -2,12 +2,11 @@ import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
 
-//import { createUser } from '../utils/API';
+// import { createUser } from '../utils/API';
 import Auth from '../utils/auth';
 import type { User } from '../models/User';
 import { useMutation } from '@apollo/client';
 import { ADD_USER } from '../utils/mutations';
-
 
 // biome-ignore lint/correctness/noEmptyPattern: <explanation>
 const SignupForm = ({}: { handleModalClose: () => void }) => {
@@ -17,7 +16,7 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
   const [validated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
-
+  
   const [createUser] = useMutation(ADD_USER);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -27,27 +26,31 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
+
     // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
     }
+
     try {
       const { data } = await createUser({
         variables: {...userFormData}
       });
       console.log(data);
+
       if (!data) {
         throw new Error('something went wrong!');
       }
+
       const { token } = data.addUser;
       Auth.login(token);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
     }
+
     setUserFormData({
       username: '',
       email: '',
@@ -55,42 +58,6 @@ const SignupForm = ({}: { handleModalClose: () => void }) => {
       savedBooks: [],
     });
   };
-
-  // const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
-  //   event.preventDefault();
-
-  //   // check if form has everything (as per react-bootstrap docs)
-  //   const form = event.currentTarget;
-  //   if (form.checkValidity() === false) {
-  //     event.preventDefault();
-  //     event.stopPropagation();
-  //   }
-
-    
-     
-
-  //     try {
-  //       const data = await createUser();
-      
-
-  //       if (!data) {
-  //        throw new Error('something went wrong!');
-       
-  //     }
-  //     const { token } = data.data.addUser; // await response.json();
-  //     Auth.login(token);
-  //   } catch (err) {
-  //     console.error(err);
-  //     setShowAlert(true);
-  //   }
-
-  //   setUserFormData({
-  //     username: '',
-  //     email: '',
-  //     password: '',
-  //     savedBooks: [],
-  //   });
-  // };
 
   return (
     <>

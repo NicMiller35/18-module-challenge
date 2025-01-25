@@ -18,23 +18,27 @@ import { useMutation } from '@apollo/client';
 import { SAVE_BOOK } from '../utils/mutations';
 
 const SearchBooks = () => {
-  // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState<Book[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
+  const [saveBook] = useMutation(SAVE_BOOK, {
+    context: {
+      headers: {
+        authorization: Auth.getToken() ? `Bearer ${Auth.getToken()}` : '',
+      },
+    }
+  });
 
-  // Apollo mutation hook
-  const [saveBook] = useMutation(SAVE_BOOK);
-
-  // Save `savedBookIds` to localStorage on unmount
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
-  }, [savedBookIds]);
+  });
 
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!searchInput) return;
+    if (!searchInput) {
+      return false;
+    }
 
     try {
       const response = await searchGoogleBooks(searchInput);
@@ -61,27 +65,32 @@ const SearchBooks = () => {
   };
 
   const handleSaveBook = async (bookId: string) => {
-    const bookToSave: Book = searchedBooks.find((book) => book.bookId === bookId)!;
+    const token = Auth.getToken();
+    if (!token) {
+      return false;
+    }
 
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
-    if (!token) return;
+    const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
+
+    if (!bookToSave) {
+      return false;
+    }
 
     try {
-      const { data } = await saveBook({
-        variables: { bookData: bookToSave },
+      await saveBook({
+        variables: { input: bookToSave },
       });
 
-      if (!data) {
-        throw new Error('something went wrong!');
-      }
-
-      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
+      setSavedBookIds([...savedBookIds, bookId]);
     } catch (err) {
       console.error(err);
     }
-  };
 
+    const updatedSavedBookIds = getSavedBookIds();
+    setSavedBookIds(updatedSavedBookIds);
 
+    return true;
+};
 
   return (
     <>
