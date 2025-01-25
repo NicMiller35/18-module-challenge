@@ -20,7 +20,7 @@ const server = new ApolloServer({
 
 const startApolloServer = async () => {
   await server.start();
-  db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+  await db();
 
   const PORT = process.env.PORT || 3001;
   const app = express();
