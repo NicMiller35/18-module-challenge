@@ -12,7 +12,7 @@ This project is a book search website. It allows the user to search for any book
 ## Usage
 
 - Github repo: <https://github.com/NicMiller35/18-module-challenge>
-- Link to site: <https://drive.google.com/file/d/1w1HDav-Qlseny0Z3exxwW3Fgo9fl-dFT/view>
+- Link to site: <https://one8-module-challenge.onrender.com/>
 
 ## Contribution
 Nic Miller
